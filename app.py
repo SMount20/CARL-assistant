@@ -10,7 +10,6 @@ if st.button("Generate Response"):
     st.write("Response for:", prompt)
 
 uploaded_file = st.file_uploader("Upload Inventory CSV")
-uploaded_file = st.file_uploader("Upload Inventory CSV")
 
 if uploaded_file:
     try:
