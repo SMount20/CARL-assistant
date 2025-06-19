@@ -13,11 +13,25 @@ uploaded_file = st.file_uploader("Upload Inventory CSV", key="inventory_upload")
 
 if uploaded_file is not None:
     try:
-        # Try reading as UTF-8 with BOM (common for Excel exports)
         df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
-    except Exception as e:
-        st.error(f"Failed to read CSV: {e}")
+    except UnicodeDecodeError:
+        try:
+            df = pd.read_csv(uploaded_file, encoding='ISO-8859-1')
+        except UnicodeDecodeError:
+            try:
+                df = pd.read_csv(uploaded_file, encoding='cp1252')
+            except Exception as e:
+                st.error(f"Failed to read CSV: {e}")
+            else:
+                st.success("Read with cp1252 encoding")
+        else:
+            st.success("Read with ISO-8859-1 encoding")
     else:
+        st.success("Read with UTF-8-SIG encoding")
+
+    try:
         st.dataframe(df)
+    except:
+        st.warning("Data loaded, but table failed to render.")
 
 st.markdown("Reminders coming soon!")
