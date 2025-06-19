@@ -11,7 +11,10 @@ if st.button("Generate Response"):
 
 uploaded_file = st.file_uploader("Upload Inventory CSV")
 if uploaded_file:
-    df = pd.read_csv(uploaded_file)
+    try:
+    df = pd.read_csv(uploaded_file, encoding='utf-8')
+except UnicodeDecodeError:
+    df = pd.read_csv(uploaded_file, encoding='ISO-8859-1')
     st.dataframe(df)
 
 st.markdown("Reminders coming soon!")
