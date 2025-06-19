@@ -1,37 +1,25 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="C.A.R.L.", layout="wide")
-st.title("C.A.R.L. — Customer Assistant for Revenue & Leads")
-st.markdown("Talk to C.A.R.L. below:")
+st.set_page_config(page_title="C.A.R.L. - Napleton Kia", layout="wide")
 
-prompt = st.text_area("Enter a dealership scenario:")
-if st.button("Generate Response"):
-    st.write("Response for:", prompt)
+st.image("napleton_logo.jpg", width=200)
+st.title("C.A.R.L. - Customer Assistant for Revenue & Leads")
 
-uploaded_file = st.file_uploader("Upload Inventory CSV", key="inventory_upload")
+search_query = st.text_input("Search Inventory", "")
 
-if uploaded_file is not None:
-    try:
-        df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
-    except UnicodeDecodeError:
-        try:
-            df = pd.read_csv(uploaded_file, encoding='ISO-8859-1')
-        except UnicodeDecodeError:
-            try:
-                df = pd.read_csv(uploaded_file, encoding='cp1252')
-            except Exception as e:
-                st.error(f"Failed to read CSV: {e}")
-            else:
-                st.success("Read with cp1252 encoding")
-        else:
-            st.success("Read with ISO-8859-1 encoding")
-    else:
-        st.success("Read with UTF-8-SIG encoding")
+# Placeholder: load data
+@st.cache_data
+def load_data():
+    return pd.DataFrame([
+        {"Stock": "FWHO12345", "Model": "Telluride", "Price": 44995, "Used/New": "New"},
+        {"Stock": "FRSL54321", "Model": "Sportage", "Price": 28995, "Used/New": "Used"},
+    ])
 
-    try:
-        st.dataframe(df)
-    except:
-        st.warning("Data loaded, but table failed to render.")
+df = load_data()
 
-st.markdown("Reminders coming soon!")
+# Simple search
+if search_query:
+    df = df[df.apply(lambda row: search_query.lower() in str(row).lower(), axis=1)]
+
+st.dataframe(df)
