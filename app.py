@@ -9,14 +9,15 @@ prompt = st.text_area("Enter a dealership scenario:")
 if st.button("Generate Response"):
     st.write("Response for:", prompt)
 
-uploaded_file = st.file_uploader("Upload Inventory CSV")
+uploaded_file = st.file_uploader("Upload Inventory CSV", key="inventory_upload")
 
-if uploaded_file:
+if uploaded_file is not None:
     try:
-        df = pd.read_csv(uploaded_file, encoding='utf-8')
-    except UnicodeDecodeError:
-        df = pd.read_csv(uploaded_file, encoding='ISO-8859-1')
-    
-    st.dataframe(df)
+        # Try reading as UTF-8 with BOM (common for Excel exports)
+        df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
+    except Exception as e:
+        st.error(f"Failed to read CSV: {e}")
+    else:
+        st.dataframe(df)
 
 st.markdown("Reminders coming soon!")
