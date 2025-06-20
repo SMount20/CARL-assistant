@@ -1,36 +1,51 @@
 import streamlit as st
 import pandas as pd
-import requests
-from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+import time
 
 st.set_page_config(page_title="C.A.R.L. - Napleton Kia", layout="wide")
-
 st.image("napleton_logo.jpg", width=200)
 st.title("C.A.R.L. - Customer Assistant for Revenue & Leads")
 
 @st.cache_data
 def scrape_inventory():
-    base_urls = [
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+
+    driver = webdriver.Chrome(options=options)
+
+    data = []
+
+    for url in [
         "https://www.napletonkiaoffishers.com/new-inventory/index.htm",
         "https://www.napletonkiaoffishers.com/used-inventory/index.htm"
-    ]
-    all_data = []
-    for url in base_urls:
-        resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
-        soup = BeautifulSoup(resp.text, "html.parser")
-        vehicles = soup.select(".vehicle-card")
-        for v in vehicles:
-            title = v.select_one(".title") or v.select_one(".vehicle-header")
-            price = v.select_one(".primary-price")
-            stock = v.select_one(".stock-number")
-            img = v.select_one("img")
-            all_data.append({
-                "Title": title.text.strip() if title else "N/A",
-                "Price": price.text.strip() if price else "N/A",
-                "Stock #": stock.text.strip().replace("Stock:", "").strip() if stock else "N/A",
-                "Image": img['src'] if img and img.get("src") else ""
-            })
-    return pd.DataFrame(all_data)
+    ]:
+        driver.get(url)
+        time.sleep(5)
+
+        cars = driver.find_elements(By.CSS_SELECTOR, ".vehicle-card, .vehicleListing")
+
+        for car in cars:
+            try:
+                title = car.find_element(By.CSS_SELECTOR, ".title, .vehicle-header").text
+                price = car.find_element(By.CSS_SELECTOR, ".primary-price").text
+                stock = car.find_element(By.CSS_SELECTOR, ".stock-number").text.replace("Stock:", "").strip()
+                img = car.find_element(By.TAG_NAME, "img").get_attribute("src")
+                data.append({
+                    "Title": title,
+                    "Price": price,
+                    "Stock #": stock,
+                    "Image": img
+                })
+            except:
+                continue
+
+    driver.quit()
+    return pd.DataFrame(data)
 
 df = scrape_inventory()
 
